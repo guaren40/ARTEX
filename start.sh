@@ -42,6 +42,22 @@ if [ -z "${ARTEX_PG_DSN:-}" ] && [ ! -f "${ARTEX_CONFIG:-./config.json}" ]; then
 	fi
 fi
 
+if [ -n "${ARTEX_PG_DSN:-}" ]; then
+	echo "[config] 已收到 ARTEX_PG_DSN"
+fi
+
+# 显式 -addr 优先，否则跟随平台 PORT；普通部署默认仍使用 8787。
+addr_provided=0
+for arg in "$@"; do
+	case "$arg" in
+		-addr|--addr|-addr=*|--addr=*) addr_provided=1; break ;;
+	esac
+done
+if [ "$addr_provided" -eq 0 ]; then
+	set -- -addr ":${PORT:-8787}" "$@"
+	echo "[web] 前端与 API 监听配置：:${PORT:-8787}（等待数据库初始化）"
+fi
+
 RESTART_CODE=75
 MAX_DELAY=60
 

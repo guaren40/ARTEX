@@ -68,6 +68,7 @@ RUN chmod +x /app/artex /app/start.sh
 COPY skills/ /app/skills/
 # data/（SQLite + jwt.key）持久化点
 VOLUME ["/app/data"]
-EXPOSE 8787 8788
+# Zeabur Git 服务只提供一个 Web 入口；8788 代理仍可在容器内部使用。
+EXPOSE 8787
 ENTRYPOINT ["/app/start.sh"]
-CMD ["-addr", ":8787", "-proxy", ":8788"]
+CMD ["-proxy", ":8788"]
