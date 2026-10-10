@@ -23,6 +23,25 @@ cd "$(dirname "$0")" || exit 1
 BIN=./artex
 [ -x "$BIN" ] || { echo "[artex] 找不到可执行文件 $BIN" >&2; exit 1; }
 
+# Zeabur 会注入 PostgreSQL 连接串；没有显式配置时映射到 ARTEX 所需的变量。
+# 保留已有 ARTEX_PG_DSN / config.json 的优先级，日志仅记录变量名。
+if [ -z "${ARTEX_PG_DSN:-}" ] && [ ! -f "${ARTEX_CONFIG:-./config.json}" ]; then
+	case "${POSTGRES_CONNECTION_STRING:-}" in
+		postgres://*|postgresql://*)
+			export ARTEX_PG_DSN="$POSTGRES_CONNECTION_STRING"
+			echo "[config] 已将 POSTGRES_CONNECTION_STRING 映射为 ARTEX_PG_DSN"
+			;;
+	esac
+	if [ -z "${ARTEX_PG_DSN:-}" ]; then
+		case "${DATABASE_URL:-}" in
+			postgres://*|postgresql://*)
+				export ARTEX_PG_DSN="$DATABASE_URL"
+				echo "[config] 已将 DATABASE_URL 映射为 ARTEX_PG_DSN"
+				;;
+		esac
+	fi
+fi
+
 RESTART_CODE=75
 MAX_DELAY=60
 
